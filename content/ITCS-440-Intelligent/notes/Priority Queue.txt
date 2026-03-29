@@ -1,0 +1,11 @@
+import heapq
+#Create an empty priority queue
+pq = []
+#Push tasks with priorities
+heapq.heappush(pq, (3, "task1"))  # 3 PRIORITY, TASK1  DATA, pq the queue
+heapq.heappush(pq, (1, "task2"))
+heapq.heappush(pq, (2, "task3"))
+#Now remove items one by one (will be sorted by priority)
+while pq:    
+  priority, task = heapq.heappop(pq)   
+  print(f"{task} with priority {priority}")

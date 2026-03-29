@@ -1,0 +1,37 @@
+
+% https://swish.swi-prolog.org/
+
+hasprop(tweety, color, white).
+hasprop(canary, color, yellow).
+hasprop(robin, color, red).
+hasprop(penguin, color, brown).
+
+hasprop(canary, sound, sing).
+hasprop(robin, sound, sing).
+
+hasprop(ostrich, travel, walk).
+hasprop(penguin, travel, walk).
+hasprop(fish, travel, swim).
+hasprop(bird, travel, fly).
+
+hasprop(bird, cover, feathers).
+hasprop(animal, cover, skin).
+
+% Classification hierarchy
+isa(tweety, canary).
+isa(canary, bird).
+isa(robin, bird).
+isa(ostrich, bird).
+isa(penguin, bird).
+isa(bird, animal).
+isa(fish, animal).
+iSA(Object,Parent) :- isa(Object,Parent).
+iSA(Object,Parent) :- isa(Object, X), iSA(X,Parent).
+
+
+hasproperty(Object, Property, Value) :-
+    hasprop(Object, Property, Value).
+
+hasproperty(Object, Property, Value) :-
+    iSA(Object, Parent),
+    hasproperty(Parent, Property, Value).

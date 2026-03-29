@@ -1,0 +1,30 @@
+% ----------- Grammar Rules -----------
+
+% 1. A sentence is a noun phrase followed by a verb phrase
+sentence --> noun_phrase, verb_phrase.
+
+% 2. A noun phrase is a noun
+noun_phrase --> noun.
+
+% 3. A noun phrase is an article followed by a noun
+noun_phrase --> article, noun.
+
+% 4. A verb phrase is a verb
+verb_phrase --> verb.
+
+% 5. A verb phrase is a verb followed by a noun phrase
+verb_phrase --> verb, noun_phrase.
+
+% ----------- Terminals -----------
+
+% 6. Articles
+article --> [a].
+article --> [the].
+
+% 7. Nouns
+noun --> [man].
+noun --> [dog].
+
+% 8. Verbs
+verb --> [likes].
+verb --> [bites].

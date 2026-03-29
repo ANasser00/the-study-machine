@@ -1,0 +1,32 @@
+{
+  "stack": "markdown",
+  "packageManager": null,
+  "gates": {
+    "lint": null,
+    "types": null,
+    "tests": null
+  },
+  "autoCommit": true,
+  "reviewers": {
+    "spec": true,
+    "quality": true,
+    "security": false,
+    "conventions": true,
+    "tests": false,
+    "business": false,
+    "performance": false
+  },
+  "conventions": {
+    "docs": ["README.md"]
+  },
+  "business": {
+    "docs": []
+  },
+  "isolation": {
+    "plan": "worktree",
+    "ship": "worktree",
+    "quick": "branch"
+  },
+  "documenters": [],
+  "plugins": []
+}

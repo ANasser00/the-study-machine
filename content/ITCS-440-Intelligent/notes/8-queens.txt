@@ -1,0 +1,40 @@
+#Define the board size
+N = 8  # Number of queens
+
+#Function to print the board
+def print_board(board):
+    for row in board:
+        print(" ".join("Q" if cell else "." for cell in row))
+    print()
+
+#Check if it's safe to place a queen
+def is_safe(board, row, col):
+    for i in range(row):
+        if board[i][col]:
+            return False
+    for i, j in zip(range(row-1, -1, -1), range(col-1, -1, -1)):
+        if board[i][j]:
+            return False
+    for i, j in zip(range(row-1, -1, -1), range(col+1, N)):
+        if board[i][j]:
+            return False
+    return True
+
+#Recursive function to solve the board and print all solutions
+def solve(board, row):
+    if row == N:
+        print_board(board)
+        return
+    for col in range(N):
+        if is_safe(board, row, col):
+            board[row][col] = True
+            solve(board, row + 1)
+            board[row][col] = False
+
+#Main function
+def solve_n_queens():
+  board = [[False for _ in range(N)] for _ in range(N)]
+  solve(board, 0)
+solve_n_queens()
+
+

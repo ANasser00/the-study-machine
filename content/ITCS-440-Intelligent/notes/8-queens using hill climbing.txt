@@ -1,0 +1,110 @@
+import random
+import copy
+
+# Function to calculate the number of conflicts (attacking queens) in a board state
+def conflicts(board):
+    """
+    board: list of 8 integers (0-7), where board[row] = col position of queen in that row
+    Returns: number of pairs of queens that attack each other
+    """
+    n = len(board)
+    total_conflicts = 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            # Check if queens in rows i and j attack each other
+            # Same column
+            if board[i] == board[j]:
+                total_conflicts += 1
+                continue
+            # Same diagonal
+            if abs(board[i] - board[j]) == abs(i - j):
+                total_conflicts += 1
+    return total_conflicts
+
+# Function to generate a random initial board (one queen per row, random column)
+def random_board(n=8):
+    """
+    Returns: a random permutation of columns for each row
+    """
+    return random.sample(range(n), n)
+
+# Hill Climbing algorithm for 8-Queens
+def hill_climbing(n=8, max_restarts=100):
+    """
+    n: board size (default 8 for 8-Queens)
+    max_restarts: max number of random restarts if stuck in local optimum
+    Returns: a valid board if solved, else None
+    """
+    for restart in range(max_restarts):
+        current = random_board(n)
+        current_conflicts = conflicts(current)
+        
+        while True:
+            # Find the best possible move (neighbor with minimum conflicts)
+            best_conflicts = current_conflicts
+            best_board = None
+            best_row = -1
+            best_col = -1
+            
+            # Try moving each queen to every possible column
+            for row in range(n):
+                current_col = current[row]
+                # Try all other columns for this row
+                for col in range(n):
+                    if col == current_col:
+                        continue  # No change
+                    # Create neighbor board
+                    neighbor = copy.deepcopy(current)
+                    neighbor[row] = col
+                    neighbor_conflicts = conflicts(neighbor)
+                    
+                    # If this is better (fewer conflicts), track it
+                    if neighbor_conflicts < best_conflicts:
+                        best_conflicts = neighbor_conflicts
+                        best_board = neighbor
+                        best_row = row
+                        best_col = col
+            
+            # If no improvement (best_conflicts == current_conflicts), we're at a local optimum
+            if best_conflicts >= current_conflicts:
+                break  # Stop for this restart
+            
+            # Move to the best neighbor
+            current = best_board
+            current_conflicts = best_conflicts
+            print(f"Restart {restart + 1}, Step: Conflicts reduced to {current_conflicts}")
+        
+        # Check if solved (0 conflicts)
+        if current_conflicts == 0:
+            print(f"Solution found after {restart + 1} restarts!")
+            return current
+    
+    print("No solution found after max restarts. Try increasing max_restarts.")
+    return None
+
+# Function to print the board visually
+def print_board(board):
+    """
+    Prints the 8x8 board with 'Q' for queens and '.' for empty
+    """
+    n = len(board)
+    for row in range(n):
+        line = ''
+        for col in range(n):
+            if board[row] == col:
+                line += 'Q '
+            else:
+                line += '. '
+        print(line)
+    print()
+
+# Main execution
+if __name__ == "__main__":
+    solution = hill_climbing(n=8, max_restarts=100)
+    if solution:
+        print("Solution Board:")
+        print_board(solution)
+        print(f"Board state: {solution}")
+        print(f"Conflicts: {conflicts(solution)}")  # Should be 0
+    else:
+        print("Failed to find a solution.")

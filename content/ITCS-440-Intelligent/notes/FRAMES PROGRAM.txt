@@ -1,0 +1,48 @@
+% Try  
+% get(travel(flies), opus).
+% get(travel(walks),opus).
+% get(travel(speed),opus).
+
+% Frame facts
+frame(name(bird),
+      isa([animal]),
+      [travel(flies), cover(feathers)],
+      []).
+
+frame(name(penguin),
+      isa([bird]),
+      [color(brown)],
+      [travel(walks)]).
+
+frame(name(canary),
+      isa([bird]),
+      [color(yellow), call(sing)],
+      [size(small)]).
+
+frame(name(tweety),
+      isa([canary]),
+      [],
+      [color(white)]).
+frame(name(opus), isa([penguin,tweety]),[color(black)],[]).
+
+
+get(Prop, Object):- frame(name(Object),_,L,_), member(Prop,L).
+get(Prop, Object):- frame(name(Object),_,_,L), member(Prop,L).
+get(Prop, Object):- frame(name(Object),isa(L),_,_), getMultiple(Prop,L).
+
+
+
+% The semicolon (;) acts as "OR"
+% The cut (!) stops backtracking if the property is found
+% If not found in P, it tries the rest (T)
+
+getMultiple(Prop, [P|T]) :-
+    get(Prop, P), !;
+    getMultiple(Prop, T).
+
+%getMultiple(Prop,[P|_]):- get(Prop, P).
+%getMultiple(Prop,[_|T]):-getMultiple(Prop,T).
+%member(X,[X|_]).
+%member(X,[Y|T]):- member(X,T).
+
+

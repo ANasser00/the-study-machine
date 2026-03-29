@@ -1,0 +1,110 @@
+
+% Declare dynamic predicate to store visited states
+:- dynamic rstate/2.
+
+% Entry point
+start :-
+    retractall(rstate(_, _)),
+    writeln("Initially state(0,0)"),
+    state(0, 0),
+    writeln("\nVisited States:"),
+    listing(rstate/2).
+
+% Goal state
+state(2, _) :- !.
+
+% Initial state
+state(0, 0) :-
+    \+ rstate(0, 0),
+    assertz(rstate(0, 0)),
+    state(0, 0).
+
+
+% Rule 2: Fill 3-gallon jug
+state(X, Y) :-
+    Y < 3,
+    \+ rstate(X, 3),
+    assertz(rstate(X, 3)),
+    format("\nRule 2 => (~w, 3)", [X]),
+    state(X, 3).
+
+% Rule 5: Empty 4-gallon jug
+state(X, Y) :-
+    X > 0,
+    \+ rstate(0, Y),
+    assertz(rstate(0, Y)),
+    format("\nRule 5 => (0, ~w)", [Y]),
+    state(0, Y).
+
+% Rule 1: Fill 4-gallon jug
+state(X, Y) :-
+    X < 4,
+    \+ rstate(4, Y),
+    assertz(rstate(4, Y)),
+    format("\nRule 1 => (4, ~w)", [Y]),
+    state(4, Y).
+
+% Rule 7: Pour 3 -> 4 (until 4-gallon is full)
+state(X, Y) :-
+    X + Y >= 4,
+    Y > 0,
+    Z is Y - (4 - X),
+    \+ rstate(4, Z),
+    assertz(rstate(4, Z)),
+    format("\nRule 7 => (4, ~w)", [Z]),
+    state(4, Z).
+
+% Rule 6: Empty 3-gallon jug
+state(X, Y) :-
+    Y > 0,
+    \+ rstate(X, 0),
+    assertz(rstate(X, 0)),
+    format("\nRule 6 => (~w, 0)", [X]),
+    state(X, 0).
+
+
+
+% Rule 8: Pour 4 -> 3 (until 3-gallon is full)
+state(X, Y) :-
+    X + Y >= 3,
+    X > 0,
+    Z is X - (3 - Y),
+    \+ rstate(Z, 3),
+    assertz(rstate(Z, 3)),
+    format("\nRule 8 => (~w, 3)", [Z]),
+    state(Z, 3).
+
+% Rule 9: Pour all from 3 -> 4 (4-gallon has space)
+state(X, Y) :-
+    X + Y =< 4,
+    Y > 0,
+    Z is X + Y,
+    \+ rstate(Z, 0),
+    assertz(rstate(Z, 0)),
+    format("\nRule 9 => (~w, 0)", [Z]),
+    state(Z, 0).
+
+% Rule 10: Pour all from 4 -> 3 (3-gallon has space)
+state(X, Y) :-
+    X + Y =< 3,
+    X > 0,
+    Z is X + Y,
+    \+ rstate(0, Z),
+    assertz(rstate(0, Z)),
+    format("\nRule 10 => (0, ~w)", [Z]),
+    state(0, Z).
+
+% Optional: Rule 11 (manual transfer)
+state(0, 2) :-
+    \+ rstate(2, 0),
+    assertz(rstate(2, 0)),
+    writeln("\nRule 11 => (2, 0)"),
+    state(2, 0).
+
+% Optional: Rule 12 (clear 4-gallon when at 2)
+state(2, Y) :-
+    \+ rstate(0, Y),
+    assertz(rstate(0, Y)),
+    format("\nRule 12 => (0, ~w)", [Y]),
+    state(0, Y).
+
