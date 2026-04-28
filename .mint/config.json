@@ -13,14 +13,14 @@
     "security": false,
     "conventions": true,
     "tests": false,
-    "business": false,
+    "business": true,
     "performance": false
   },
   "conventions": {
-    "docs": ["README.md"]
+    "docs": ["CLAUDE.md", "README.md"]
   },
   "business": {
-    "docs": []
+    "docs": ["CLAUDE.md"]
   },
   "isolation": {
     "plan": "worktree",
