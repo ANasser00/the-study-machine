@@ -1,0 +1,291 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{multirow}
+
+% ── Code listing style ────────────────────────────────────────────────────────
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray},
+    stringstyle=\color{orange!70!black},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    numbersep=5pt,
+    xleftmargin=1.5em,
+}
+
+% ── Section formatting ────────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Title ─────────────────────────────────────────────────────────────────────
+\begin{center}
+    {\Large\bfseries University of Bahrain}\\[4pt]
+    College of Information Technology\\
+    Department of Computer Science\\[6pt]
+    {\large ITCS 440: Intelligent Systems}\\
+    Second Semester 2025/2026\\[8pt]
+    \rule{\linewidth}{0.8pt}\\[6pt]
+    {\LARGE\bfseries Expert System for Mobile Phone\\[4pt] Fault Diagnosis}\\[6pt]
+    \rule{\linewidth}{0.8pt}\\[10pt]
+\end{center}
+
+\noindent
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\multirow{3}{*}{\textbf{Student Names}} & Abdulnaser Fawzi Hamadi \\
+\cline{2-2}
+ & Youssef Gamal Elsayed \\
+\cline{2-2}
+ & Khalid Jassas Saleh \\
+\hline
+\multirow{3}{*}{\textbf{Student IDs}} & 202008866 \\
+\cline{2-2}
+ & 202002321 \\
+\cline{2-2}
+ & 202008213 \\
+\hline
+\textbf{Section}      & 3 \\
+\hline
+\textbf{Submission Date} & May 17, 2026 \\
+\hline
+\end{tabular}
+
+\bigskip
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+
+Expert systems are a branch of Artificial Intelligence that emulate the decision-making
+ability of a human expert within a specific domain. They encode expert knowledge as a
+set of IF-THEN rules and use an inference engine to derive conclusions from user-provided
+facts. Unlike neural networks or statistical models, expert systems are fully
+transparent: every conclusion can be traced back to the exact rules that fired.
+
+This project implements an expert system for diagnosing mobile phone faults.
+Mobile phones are complex multi-component devices (battery, screen, cellular radio,
+Wi-Fi, audio hardware, storage) and most users cannot easily determine whether a
+symptom (e.g.\ a black screen, no cellular signal) points to a hardware fault,
+a software problem, or simple user error. The system guides users through a structured
+symptom questionnaire and produces one or more specific diagnoses with recommended
+actions, replicating what an experienced repair technician would conclude.
+
+The system is implemented in pure Python with no external libraries and runs in
+a command-line interface.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{System Design}
+
+\subsection{Architecture}
+
+The system follows the classic expert system architecture with three components:
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Knowledge Base}: A collection of 21 IF-THEN production rules covering
+          six fault categories (power/battery, screen, network, audio, storage/software,
+          camera) plus a fact dictionary with human-readable descriptions of each
+          possible diagnosis.
+
+    \item \textbf{Inference Engine}: A forward-chaining engine that iteratively
+          applies rules to the working memory (set of known facts) until no new
+          conclusions can be derived (fixed-point termination).
+
+    \item \textbf{Working Memory}: A dynamic set of facts populated by the user
+          during the consultation session and extended by the inference engine as
+          intermediate conclusions are reached.
+\end{enumerate}
+
+\subsection{Knowledge Representation}
+
+Each rule is represented as a Python dictionary with three fields:
+
+\begin{lstlisting}[style=pythonstyle]
+{
+    "id":         "R1",
+    "conditions": ["phone_wont_turn_on", "battery_not_charging"],
+    "conclusion": "faulty_battery"
+}
+\end{lstlisting}
+
+Facts are stored as strings in a Python \texttt{set}, enabling O(1) membership
+tests during rule evaluation. The full knowledge base contains 21 rules spanning
+the six diagnostic categories shown in Table~\ref{tab:rules}.
+
+\begin{table}[h]
+\centering
+\caption{Rule distribution by fault category}
+\label{tab:rules}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Category} & \textbf{Rules} & \textbf{Rule IDs} \\
+\midrule
+Power \& Battery    & 5 & R1--R5   \\
+Screen              & 3 & R6--R8   \\
+Network             & 4 & R9--R12  \\
+Audio               & 3 & R13--R15 \\
+Storage \& Software & 4 & R16--R19 \\
+Camera              & 2 & R20--R21 \\
+\midrule
+\textbf{Total}      & \textbf{21} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Inference Engine: Forward Chaining}
+
+The inference engine implements a \emph{data-driven} forward-chaining strategy.
+Starting from the user-supplied symptom facts, it scans all rules on each iteration.
+A rule fires if and only if every condition in its \texttt{conditions} list is
+already present in the working memory. The conclusion is then added to the working
+memory. Iteration continues until a full pass over all rules produces no new
+conclusions (fixed-point). The algorithm is shown below.
+
+\begin{lstlisting}[style=pythonstyle]
+def forward_chain(facts):
+    fired = []
+    changed = True
+    while changed:
+        changed = False
+        for rule in RULES:
+            conclusion = rule["conclusion"]
+            if conclusion not in facts and \
+               all(c in facts for c in rule["conditions"]):
+                facts.add(conclusion)
+                fired.append(rule)
+                changed = True
+    return fired
+\end{lstlisting}
+
+\textbf{Termination guarantee:} the knowledge base is finite and each conclusion
+is added at most once (the \texttt{conclusion not in facts} guard prevents
+re-firing). Therefore the loop terminates in at most $|Rules|$ iterations.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Sample Rules and Knowledge Base}
+
+Table~\ref{tab:samplerules} lists a representative sample of ten rules from the
+knowledge base to illustrate the coverage and reasoning patterns of the system.
+
+\begin{table}[h]
+\centering
+\caption{Sample rules from the knowledge base}
+\label{tab:samplerules}
+\small
+\begin{tabular}{p{0.6cm} p{5.5cm} p{5.5cm}}
+\toprule
+\textbf{ID} & \textbf{Conditions (IF)} & \textbf{Conclusion (THEN)} \\
+\midrule
+R1  & phone\_wont\_turn\_on $\wedge$ battery\_not\_charging       & faulty\_battery \\
+R2  & phone\_wont\_turn\_on $\wedge$ battery\_charging\_ok        & faulty\_power\_button \\
+R4  & battery\_drains\_fast $\wedge$ few\_apps\_running           & replace\_battery \\
+R6  & screen\_black $\wedge$ phone\_on                            & faulty\_display \\
+R7  & screen\_cracked $\wedge$ touch\_not\_responding             & replace\_screen \\
+R9  & no\_signal $\wedge$ sim\_card\_present                      & faulty\_antenna \\
+R11 & wifi\_not\_connecting $\wedge$ other\_devices\_connect\_ok  & faulty\_wifi\_module \\
+R13 & no\_sound $\wedge$ headphones\_plugged\_in                  & faulty\_speaker \\
+R16 & phone\_slow $\wedge$ storage\_full                          & free\_up\_storage \\
+R17 & phone\_slow $\wedge$ storage\_ok                            & perform\_factory\_reset \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Note that rules R1 and R2 share the same first condition
+(\texttt{phone\_wont\_turn\_on}) but differ in the second, allowing the system to
+distinguish between a battery fault and a power-button fault based on a single
+additional observation. Similarly, R16 and R17 distinguish software corruption
+from a full-storage problem. This disambiguation capability is a key advantage of
+rule-based expert systems over simple decision trees.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Testing and Results}
+
+\subsection{Test Scenarios}
+
+Three representative scenarios were used to validate the system.
+
+\paragraph{Scenario 1: Storage fault (Demo mode)}
+
+\textbf{Input facts:} \texttt{phone\_slow}, \texttt{storage\_full},
+\texttt{app\_keeps\_crashing}
+
+\textbf{Rules fired:}
+\begin{itemize}[nosep]
+    \item R16: phone\_slow $\wedge$ storage\_full $\Rightarrow$ \textbf{free\_up\_storage}
+    \item R19: app\_keeps\_crashing $\wedge$ storage\_full $\Rightarrow$ \textbf{free\_up\_storage} (already in facts, not re-added)
+\end{itemize}
+
+\textbf{Diagnosis:} ``Storage is full. Delete unused files, apps, or transfer data.''
+
+\paragraph{Scenario 2: Battery fault}
+
+\textbf{Input facts:} \texttt{phone\_wont\_turn\_on}, \texttt{battery\_not\_charging}
+
+\textbf{Rules fired:}
+\begin{itemize}[nosep]
+    \item R1: phone\_wont\_turn\_on $\wedge$ battery\_not\_charging $\Rightarrow$ \textbf{faulty\_battery}
+\end{itemize}
+
+\textbf{Diagnosis:} ``The battery is defective and must be replaced by a technician.''
+
+\paragraph{Scenario 3: Network fault}
+
+\textbf{Input facts:} \texttt{no\_signal}, \texttt{sim\_card\_present}
+
+\textbf{Rules fired:}
+\begin{itemize}[nosep]
+    \item R9: no\_signal $\wedge$ sim\_card\_present $\Rightarrow$ \textbf{faulty\_antenna}
+\end{itemize}
+
+\textbf{Diagnosis:} ``The cellular antenna is damaged. Hardware repair required.''
+
+\subsection{System Behaviour}
+
+All three scenarios produced correct, expected diagnoses. The system correctly
+handles multiple simultaneous faults: if the user reports both battery and screen
+symptoms, both diagnoses are returned independently. The fixed-point loop ensures
+that no applicable rule is missed even when a rule's conclusion acts as a condition
+for another rule (chained inference).
+
+When no rule conditions are satisfied, the system outputs a message directing the
+user to a technician rather than producing a wrong or empty diagnosis silently.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Conclusion}
+
+This project successfully demonstrates the core principles of rule-based expert
+systems: knowledge representation as IF-THEN rules, forward-chaining inference,
+and transparent explainability. The mobile phone fault diagnosis domain provided
+a natural, practically relevant use case with clear symptom-to-cause mappings
+that translate cleanly into production rules.
+
+The system covers 21 rules across six hardware/software categories and correctly
+disambiguates between fault types that share common symptoms (e.g.\ distinguishing
+a dead battery from a broken power button). All diagnosed conclusions are
+accompanied by plain-language repair advice.
+
+Future extensions could include: a graphical user interface, probabilistic
+confidence scores for uncertain symptoms, a larger knowledge base contributed by
+actual repair technicians, and backward chaining to ask only the most relevant
+questions for a given hypothesis.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\end{document}

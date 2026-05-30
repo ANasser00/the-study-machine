@@ -1,0 +1,261 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{caption}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\begin{document}
+
+% ── Title ─────────────────────────────────────────────────────────────────────
+\begin{center}
+    {\Large\bfseries University of Bahrain}\\[4pt]
+    College of Information Technology\\
+    Department of Computer Science\\[6pt]
+    {\large ITCS 440: Intelligent Systems}\\
+    Second Semester 2025/2026\\[8pt]
+    \rule{\linewidth}{0.8pt}\\[6pt]
+    {\LARGE\bfseries Assignment 2: Neural Networks}\\[4pt]
+    {\large Backpropagation Experiments on UCI Datasets}\\[6pt]
+    \rule{\linewidth}{0.8pt}\\[10pt]
+\end{center}
+
+\noindent
+\begin{tabular}{|l|p{9cm}|}
+\hline
+\multirow{2}{*}{\textbf{Student Names}} & Abdulnaser Fawzi Hamadi \\
+\cline{2-2}
+ & Khalid Jassas Saleh \\
+\hline
+\multirow{2}{*}{\textbf{Student IDs}} & 202008866 \\
+\cline{2-2}
+ & 202008213 \\
+\hline
+\textbf{Section}      & 3 \\
+\hline
+\textbf{Submission Date} & May 17, 2026 \\
+\hline
+\end{tabular}
+
+\bigskip
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Introduction}
+
+In this assignment I used a backpropagation neural network to classify two
+different datasets taken from the UCI Machine Learning Repository. The idea
+behind backpropagation is straightforward: the network makes a prediction,
+measures how wrong it was, then works backwards through each layer adjusting
+the weights slightly to reduce that error. This process repeats for many
+iterations until the model stops improving.
+
+Three parameters were changed between runs to see how they affect the outcome.
+The \textbf{learning rate} decides how big each weight update is. Too large and
+the model jumps past the solution; too small and it barely moves.
+\textbf{Momentum} carries some of the previous update forward into the next
+step, which helps when the gradient keeps pointing in the same direction.
+\textbf{Epochs} is simply how many times the algorithm goes over the full
+training data. More passes usually mean better accuracy, up to a point.
+
+I ran four different combinations of these parameters on each dataset and
+recorded the accuracy and F1-score for every run. The goal was to observe
+how changing one parameter at a time shifts the results and to find out which
+combination works best.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Datasets}
+
+\subsection{Dataset 1: Pima Indians Diabetes (UCI)}
+
+\textbf{Source:} UCI Machine Learning Repository\\
+\textbf{URL:} \url{https://archive.ics.uci.edu/ml/datasets/diabetes}\\
+\textbf{Instances:} 768\\
+\textbf{Features:} 8 numeric attributes (pregnancies, glucose, blood pressure,
+skin thickness, insulin, BMI, diabetes pedigree function, age)\\
+\textbf{Classes:} 2 (positive/negative diabetes diagnosis)\\
+\textbf{Task:} Binary classification
+
+This dataset contains medical records from female patients and the task is to
+predict whether a patient has diabetes or not. I picked it because it is
+well-studied, small enough to qualify under 1000 instances, and the features
+are straightforward medical measurements. One thing worth noting is that some
+values like insulin and glucose are recorded as zero in the file, which
+actually represents missing data. This makes the classification harder than
+it looks on paper.
+
+\subsection{Dataset 2: Adult Census Income (UCI)}
+
+\textbf{Source:} UCI Machine Learning Repository\\
+\textbf{URL:} \url{https://archive.ics.uci.edu/ml/datasets/adult}\\
+\textbf{Instances:} 48,842\\
+\textbf{Features:} 14 attributes (age, workclass, education, marital status,
+occupation, relationship, race, sex, capital gain/loss, hours per week, country)\\
+\textbf{Classes:} 2 (income $\leq$50K or $>$50K)\\
+\textbf{Task:} Binary classification
+
+This dataset comes from the 1994 US Census and the goal is to predict whether
+a person earns more or less than \$50,000 per year. It has over 48,000 records
+which makes it a good choice for the large dataset requirement. The features
+are a mix of numbers and categories like occupation and education level, so
+the categorical ones had to be converted to numbers before the network could
+use them. Despite having more features than the Pima dataset, the class
+boundary here seems easier for the network to learn.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Experimental Setup}
+
+For both datasets I used a single hidden layer with 100 neurons and the
+sigmoid activation function. The network was trained using stochastic gradient
+descent, which is the same algorithm used inside the WEKA MultilayerPerceptron
+classifier. Each dataset was split 80/20 for training and testing and the
+features were scaled before training so that no single feature dominates due
+to its range.
+
+Four runs were done per dataset. Each run kept the architecture the same and
+only changed the momentum, learning rate, and number of epochs.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Results}
+
+\subsection{Dataset 1: Pima Indians Diabetes}
+
+\begin{table}[h]
+\centering
+\caption{Backpropagation results on Pima Indians Diabetes dataset (768 instances)}
+\label{tab:diabetes}
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Momentum} & \textbf{Learning Rate} & \textbf{Epochs} & \textbf{Accuracy} & \textbf{F1-Score} \\
+\midrule
+0.2 & 0.10 & 100 & 68.83\% & 69.47\% \\
+0.5 & 0.30 & 200 & 77.92\% & 76.03\% \\
+0.9 & 0.01 & 500 & 74.03\% & 74.21\% \\
+0.2 & 0.50 & 300 & 72.73\% & 73.14\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dataset 2: Adult Census Income}
+
+\begin{table}[h]
+\centering
+\caption{Backpropagation results on Adult Census Income dataset (48,842 instances)}
+\label{tab:adult}
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Momentum} & \textbf{Learning Rate} & \textbf{Epochs} & \textbf{Accuracy} & \textbf{F1-Score} \\
+\midrule
+0.2 & 0.10 & 100 & 85.46\% & 84.96\% \\
+0.5 & 0.30 & 200 & 85.76\% & 85.31\% \\
+0.9 & 0.01 & 500 & 85.62\% & 85.22\% \\
+0.2 & 0.50 & 300 & 85.33\% & 84.18\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Analysis and Discussion}
+
+\subsection{Dataset 1: Pima Indians Diabetes}
+
+The Pima dataset results varied quite a bit between runs, which was expected
+given how small the dataset is. Small datasets are more sensitive to how the
+network is configured.
+
+\textbf{Run 1} gave the worst result at 68.83\%. Only 100 epochs with a low
+momentum of 0.2 meant the network stopped learning too early. There simply
+wasn't enough training time, and without strong momentum the updates were too
+weak to push the weights toward a good solution.
+
+\textbf{Run 2} was clearly the best: 77.92\% accuracy and 76.03\% F1-score.
+The learning rate of 0.3 is high enough that the weights update meaningfully
+each step, and a momentum of 0.5 keeps things moving without getting unstable.
+Going to 200 epochs gave it enough time to actually converge. In my opinion
+this run worked because none of the three values were at an extreme.
+
+\textbf{Run 3} had 500 epochs but a very low learning rate of 0.01, which
+explains the 74.03\% result. The network was learning, just extremely slowly.
+The high momentum of 0.9 helped carry it forward but even then 500 passes
+weren't quite enough to close the gap. It's a case where increasing epochs
+even further might have helped.
+
+\textbf{Run 4} had the highest learning rate at 0.5 and got 72.73\%. A rate
+that high tends to overshoot and the model ended up bouncing around instead of
+settling. Adding more epochs (300) helped a little but the damage from early
+unstable updates was hard to undo.
+
+The main takeaway from this dataset is that extremes don't work well here.
+The best run was the one where all three parameters were at moderate values.
+
+\subsection{Dataset 2: Adult Census Income}
+
+The Adult dataset behaved very differently from Pima. All four runs landed
+between 85.33\% and 85.76\%, which is a much narrower range. When you have
+nearly 40,000 training samples, the network gets enough information each epoch
+that minor differences in learning rate or momentum don't matter as much.
+
+\textbf{Run 1} reached 85.46\% accuracy even with just 100 epochs. The large
+amount of data compensates for the fewer training passes, so the model still
+learns a solid decision boundary.
+
+\textbf{Run 2} was again the top performer at 85.76\% accuracy and 85.31\%
+F1-score. The same mid-range settings that worked on the small dataset worked
+here too.
+
+\textbf{Run 3} got 85.62\%. The low learning rate slowed things down but the
+combination of high momentum and 500 epochs recovered the loss. It essentially
+took longer to get to a similar place.
+
+\textbf{Run 4} is interesting: the accuracy was fine at 85.33\% but the
+F1-score dropped noticeably to 84.18\%. The high learning rate (0.5) made the
+model less precise on the minority class, which in this dataset is people
+earning over \$50K. Accuracy alone hides this problem because the majority
+class is large enough to keep the percentage high regardless.
+
+\subsection{Comparison Between Datasets}
+
+The two datasets are quite different in how they respond to parameter changes.
+Pima showed a 9-point swing in accuracy across runs while Adult barely moved 0.5
+points. The reasons come down to three things. First, more data means more stable
+training. Second, the Adult features like education and occupation carry stronger
+signals for the prediction task than the Pima medical measurements which have
+noisy zeros. Third, the Pima minority class (diabetic patients) is harder to
+separate from the majority class given only 8 features.
+
+One consistent pattern is that Run 2 came out on top for both datasets.
+This suggests that mid-range values tend to be safer than extremes regardless
+of how big the dataset is.
+
+% ═════════════════════════════════════════════════════════════════════════════
+\section{Conclusion}
+
+Running these experiments on two datasets of very different sizes gave a clear
+picture of how parameter tuning affects backpropagation. On the Pima dataset the
+difference between a bad run and the best run was almost 10 percentage points,
+which shows how much the settings matter when training data is limited. On the
+Adult dataset the results were much more stable and the network performed well
+across all four configurations.
+
+The setting that worked best in both cases was a learning rate of 0.3, momentum
+of 0.5, and 200 epochs. Nothing extreme. In practice this makes sense: a
+moderate learning rate takes steps that are large enough to make real progress
+but small enough not to overshoot, and momentum of 0.5 smooths out the updates
+without over-relying on past gradients.
+
+From these runs I'd say the most important lesson is to watch both accuracy and
+F1-score together. The high learning rate run on the Adult dataset looked fine
+by accuracy but the F1 told a different story. For problems with class imbalance,
+F1 is the more honest measure of how well the model actually works.
+
+\end{document}
